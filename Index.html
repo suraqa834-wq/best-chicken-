@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Murghi POS & Hisab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #090d16;
+            --card: #131c2e;
+            --input: #1e293b;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --cyan: #06b6d4;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); padding: 10px; min-height: 100vh; }
+        .app { max-width: 460px; margin: 0 auto; padding-bottom: 40px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 14px 16px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 12px; }
+        .h-info h1 { font-size: 16px; font-weight: 800; color: #fff; }
+        .h-info span { font-size: 10px; color: var(--amber); background: rgba(245,158,11,0.12); padding: 2px 8px; border-radius: 99px; font-weight: 700; display: inline-block; margin-top: 2px; }
+        .timer-badge { font-size: 10px; color: var(--cyan); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 99px; font-weight: 800; display: inline-block; margin-left: 4px; }
+        .admin-btn { background: var(--input); border: 1px solid var(--border); color: var(--muted); padding: 7px 12px; border-radius: 9px; font-size: 11px; font-weight: 700; cursor: pointer; }
+
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .stat-box { background: var(--card); border: 1px solid var(--border); padding: 12px 14px; border-radius: 14px; }
+        .stat-box.prime { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.06)); border-color: rgba(16,185,129,0.3); }
+        .stat-box small { display: block; font-size: 9px; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
+        .stat-box strong { font-size: 19px; font-weight: 800; color: var(--emerald); }
+        .stat-box.udhaar-card strong { color: var(--rose); }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+        .title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+        .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+        .cat-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 11px; padding: 12px 6px; text-align: center; cursor: pointer; color: #fff; transition: 0.12s; }
+        .cat-item:active { transform: scale(0.95); }
+        .cat-item.selected { border-color: var(--amber); background: rgba(245,158,11,0.16); box-shadow: 0 0 12px rgba(245,158,11,0.18); }
+        .cat-item .icon { font-size: 20px; display: block; margin-bottom: 4px; }
+        .cat-item b { display: block; font-size: 12px; margin-bottom: 2px; }
+        .cat-item span { font-size: 11px; font-weight: 800; color: var(--emerald); }
+
+        .weight-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .w-btn { background: var(--input); border: 1px solid var(--border); color: #fff; padding: 10px 4px; border-radius: 9px; font-size: 11px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.1s; }
+        .w-btn:active { transform: scale(0.94); background: rgba(6,182,212,0.25); border-color: var(--cyan); }
+        .w-btn small { display: block; font-size: 9px; color: var(--cyan); font-weight: 700; margin-top: 2px; }
+
+        .custom-row { display: flex; gap: 6px; margin-bottom: 12px; }
+        .custom-row input { flex: 1; background: var(--input); border: 1px solid var(--border); color: #fff; padding: 9px 10px; border-radius: 9px; font-size: 12px; font-weight: 700; outline: none; }
+        .custom-row input::placeholder { color: var(--muted); font-weight: 500; font-size: 11px; }
+
+        .bill-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(16,185,129,0.25); padding: 12px; border-radius: 11px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .bill-info b { display: block; font-size: 13px; color: #fff; }
+        .bill-info span { font-size: 11px; color: var(--amber); font-weight: 700; }
+        .bill-total { text-align: right; }
+        .bill-total small { display: block; font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+        .bill-total strong { font-size: 20px; font-weight: 800; color: var(--emerald); }
+        .clear-btn { background: rgba(244,63,94,0.18); border: 1px solid rgba(244,63,94,0.4); color: var(--rose); padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; cursor: pointer; margin-left: 6px; }
+
+        .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .act-btn { border: none; border-radius: 11px; padding: 13px 4px; font-size: 12px; font-weight: 800; color: #fff; cursor: pointer; text-align: center; }
+        .act-btn:active { transform: scale(0.96); }
+        .b-cash { background: linear-gradient(135deg, #10b981, #059669); }
+        .b-online { background: linear-gradient(135deg, #06b6d4, #0284c7); }
+        .b-udhaar { background: linear-gradient(135deg, #f43f5e, #be123c); }
+
+        .cal-box { display: flex; gap: 6px; align-items: center; background: var(--input); padding: 6px 10px; border-radius: 9px; margin-bottom: 10px; }
+        .cal-box input { background: transparent; border: none; color: #fff; font-size: 11px; font-weight: 600; flex: 1; outline: none; color-scheme: dark; }
+        .cal-box button { background: rgba(255,255,255,0.06); border: none; color: var(--cyan); padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+
+        .weight-summary { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); padding: 8px 10px; border-radius: 8px; font-size: 11px; color: var(--amber); font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
+
+        .table-wrap { max-height: 250px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { text-align: left; font-size: 9px; color: var(--muted); text-transform: uppercase; padding: 6px 4px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card); }
+        td { padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+        .tag { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: 800; }
+        .t-cash { background: rgba(16,185,129,0.15); color: var(--emerald); }
+        .t-online { background: rgba(6,182,212,0.15); color: var(--cyan); }
+        .t-udhaar { background: rgba(244,63,94,0.15); color: var(--rose); }
+        .del-row-btn { background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.3); color: var(--rose); padding: 3px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; cursor: pointer; }
+
+        #trialModal { display: none; position: fixed; inset: 0; background: rgba(5, 8, 13, 0.98); backdrop-filter: blur(14px); z-index: 9999; justify-content: center; align-items: center; padding: 16px; text-align: center; }
+        .trial-card { background: var(--card); border: 2px solid var(--emerald); border-radius: 18px; padding: 26px 20px; max-width: 360px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+
+        #paywall { display: none; position: fixed; inset: 0; background: rgba(5, 8, 13, 0.98); backdrop-filter: blur(14px); z-index: 9999; justify-content: center; align-items: center; padding: 16px; text-align: center; }
+        .pay-card { background: var(--card); border: 2px solid var(--rose); border-radius: 18px; padding: 24px 18px; max-width: 360px; width: 100%; }
+        .sub-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 12px 0; text-align: left; }
+        .sub-box div { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+        .sub-box div:last-child { margin-bottom: 0; }
+
+        #adminModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 5000; justify-content: center; align-items: flex-start; padding: 10px; overflow-y: auto; }
+        .admin-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; max-width: 440px; width: 100%; margin: 10px auto; }
+        .admin-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+        .a-box { background: var(--input); padding: 10px 4px; border-radius: 9px; text-align: center; }
+        .a-box span { display: block; font-size: 8px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+        .a-box strong { font-size: 12px; color: var(--emerald); font-weight: 800; }
+        .form-row { margin-bottom: 10px; }
+        .form-row label { display: block; font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .form-row input, .form-row select { width: 100%; background: var(--input); border: 1px solid var(--border); color: #fff; padding: 9px; border-radius: 8px; font-size: 11px; outline: none; }
+        .item-line { display: flex; gap: 5px; margin-bottom: 6px; align-items: center; }
+        .item-line input { background: var(--input); border: 1px solid var(--border); color: #fff; padding: 7px; border-radius: 7px; font-size: 11px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div id="trialModal">
+        <div class="trial-card">
+            <div style="font-size: 38px; margin-bottom: 10px;">🐔</div>
+            <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 6px; color: #fff;">24 Ghante Ka Free Trial</h2>
+            <p style="font-size: 12px; color: var(--muted); line-height: 1.4; margin-bottom: 18px;">
+                Apni murghi ki dukaan ka poora hisab (Gosht, Boneless, Kaleji, Pote, Bazu, Zinda) ek tap mein karne ke liye trial shuru karein.
+            </p>
+            <button onclick="start24HourTrial()" class="act-btn b-cash" style="width:100%; padding: 14px; font-size: 13px; border-radius: 12px; box-shadow: 0 8px 20px rgba(16,185,129,0.25);">
+                ⚡ Start 24-Hour Free Trial
+            </button>
+            <div style="margin-top: 12px;">
+                <button onclick="openAdmin()" style="background:none; border:none; color:var(--muted); font-size:10px; text-decoration:underline; cursor:pointer;">Admin Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paywall">
+        <div class="pay-card">
+            <div style="font-size: 36px; margin-bottom: 8px;">🔒</div>
+            <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px; color: #fff;">Trial Khatam / Plan Band</h2>
+            <p id="lockMsg" style="font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 12px;">
+                Aapka 24 ghante ka free trial mukammal ho gaya hai. Mazeed istamal ke liye subscription plan hasil karein.
+            </p>
+            <div class="sub-box">
+                <div><span>📅 Monthly Plan:</span><strong style="color:var(--emerald);">Rs. 1,500 / month</strong></div>
+                <div><span>👑 Yearly VIP Plan:</span><strong style="color:var(--cyan);">Rs. 12,000 / year</strong></div>
+            </div>
+            <a href="https://wa.me/923231224080?text=Assalam-o-Alaikum!%20Mera%20Murghi%20POS%20trial%20khatam%20ho%20gaya%20hai,%20mujhe%20subscription%20activate%20karwani%20hai." target="_blank" style="display:block; text-decoration:none; background: linear-gradient(135deg, #10b981, #059669); padding: 12px; border-radius: 11px; color: #fff; font-weight: 800; font-size: 12px; margin-bottom: 10px;">
+                💬 Subscribe on WhatsApp (+92 323 1224080)
+            </a>
+            <button onclick="openAdmin()" style="background:none; border:none; color:var(--muted); font-size:10px; text-decoration:underline; cursor:pointer;">Admin Unlock</button>
+        </div>
+    </div>
+
+    <div id="adminModal">
+        <div class="admin-wrap">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-size: 14px; font-weight: 800;">⚙️ Master Admin Control</h3>
+                <button onclick="closeAdmin()" style="background:none; border:none; color:#fff; font-size:16px; cursor:pointer;">✕</button>
+            </div>
+            <div class="admin-stats-grid">
+                <div class="a-box"><span>Aaj Ki Sale</span><strong id="admToday">Rs. 0</strong></div>
+                <div class="a-box"><span>Mahina Sale</span><strong id="admMonth">Rs. 0</strong></div>
+                <div class="a-box"><span>Kul Udhaar</span><strong id="admUdhaar" style="color:var(--rose);">Rs. 0</strong></div>
+            </div>
+            <div class="form-row">
+                <label>Dukaan Ka Naam (Shop Name)</label>
+                <input type="text" id="admShop">
+            </div>
+            <div class="form-row">
+                <label>License / Lock Control</label>
+                <select id="admStatus">
+                    <option value="active">🟢 Active (24h Trial Chalu)</option>
+                    <option value="subscribed">👑 Subscribed (Full Unlimited)</option>
+                    <option value="locked">🔴 Force Lock (Abhi Band Karo)</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Reset Timer</label>
+                <button type="button" onclick="reset24hTimer()" style="width:100%; background:var(--input); border:1px solid var(--cyan); color:var(--cyan); padding:8px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">🔄 Restart 24-Hour Timer Now</button>
+            </div>
+            <div class="title" style="margin-top:12px;">
+                <span>Aaj Ka Rate List (Per KG Rate Edit Karein)</span>
+                <button onclick="addCatRow()" style="background:var(--emerald); border:none; color:#fff; padding:3px 6px; border-radius:5px; font-size:9px; font-weight:700; cursor:pointer;">+ Add Item</button>
+            </div>
+            <div id="admCatBox" style="max-height: 160px; overflow-y: auto; margin-bottom: 12px;"></div>
+            <div style="display:flex; gap:6px;">
+                <button onclick="saveAdmin()" class="act-btn b-cash" style="flex:1;">Save Settings</button>
+                <button onclick="exportBackup()" class="act-btn b-online" style="flex:1;">📥 Backup JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app">
+        <div class="header">
+            <div class="h-info">
+                <h1 id="shopTitle">Al-Madina Chicken Shop</h1>
+                <div>
+                    <span>🐔 Smart Murghi Hisab</span>
+                    <span id="liveTimerBadge" class="timer-badge" style="display:none;">⏱️ 24:00:00</span>
+                </div>
+            </div>
+            <button class="admin-btn" onclick="openAdmin()">⚙️ Admin</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box prime">
+                <small id="saleLbl">Aaj Ki Total Sale</small>
+                <strong id="dispSales">Rs. 0</strong>
+            </div>
+            <div class="stat-box udhaar-card">
+                <small>Kul Udhaar Baqi</small>
+                <strong id="dispUdhaar">Rs. 0</strong>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="title">
+                <span>1. Item Chunein (Kya Liya Hai?)</span>
+                <span style="color:var(--emerald); font-size:9px;">Rate / KG</span>
+            </div>
+            <div class="cat-grid" id="catBox"></div>
+
+            <div class="title">
+                <span>2. Wazan Tap Karein (Weight)</span>
+                <span style="color:var(--cyan); font-size:9px;">Tap = Add Weight</span>
+            </div>
+            <div class="weight-grid">
+                <div class="w-btn" onclick="addWeight(100)">+100g<small>100 Gram</small></div>
+                <div class="w-btn" onclick="addWeight(250)">+250g<small>1 Pao</small></div>
+                <div class="w-btn" onclick="addWeight(500)">+500g<small>Adha Kilo</small></div>
+                <div class="w-btn" onclick="addWeight(1000)">+1 KG<small>1000 Gram</small></div>
+            </div>
+
+            <div class="custom-row">
+                <input type="number" id="manualGrams" placeholder="Ya Gram likhein (e.g. 750)" oninput="onManualGramInput()">
+                <input type="number" id="manualRs" placeholder="Ya Seedha Rs. likhein (e.g. 300)" oninput="onManualRsInput()">
+            </div>
+
+            <div class="bill-box">
+                <div class="bill-info">
+                    <div style="display:flex; align-items:center;">
+                        <b id="selItemName">Gosht (Safi)</b>
+                        <button id="resetSelBtn" class="clear-btn" onclick="resetSelection()" style="display:none;">✕ Reset</button>
+                    </div>
+                    <span id="selWeightText">Wazan: 0 g (0 KG)</span>
+                </div>
+                <div class="bill-total">
+                    <small>Total Bill</small>
+                    <strong id="selTotalRs">Rs. 0</strong>
+                </div>
+            </div>
+
+            <div class="title">3. Hisab Save Karein</div>
+            <div class="action-grid">
+                <button class="act-btn b-cash" onclick="recordSale('Cash')">💵 Cash</button>
+                <button class="act-btn b-online" onclick="recordSale('Online')">📱 Online</button>
+                <button class="act-btn b-udhaar" onclick="recordSale('Udhaar')">📒 Udhaar</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="title">
+                <span>Rozana Khata (Ledger)</span>
+                <span id="counter" style="color:var(--cyan);">0 entries</span>
+            </div>
+
+            <div class="cal-box">
+                <span style="font-size:13px;">📅</span>
+                <input type="date" id="dateFilter" onchange="renderApp()">
+                <button onclick="clearDateFilter()">Sab Dikhao</button>
+            </div>
+
+            <div class="weight-summary">
+                <span>⚖️ Kul Bika Hua Wazan:</span>
+                <span id="totalWeightSold">0.00 KG</span>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item / Wazan</th>
+                            <th>Bill</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+        <script>
+        const initialCategories = [
+            { id: 1, icon: "🍗", name: "Gosht (Safi)", ratePerKg: 620 },
+            { id: 2, icon: "🥩", name: "Boneless", ratePerKg: 950 },
+            { id: 3, icon: "🫀", name: "Kaleji", ratePerKg: 480 },
+            { id: 4, icon: "🍲", name: "Pote", ratePerKg: 450 },
+            { id: 5, icon: "🪽", name: "Bazu (Wings)", ratePerKg: 420 },
+            { id: 6, icon: "🐔", name: "Zinda Murghi", ratePerKg: 390 }
+        ];
+
+        const TRIAL_DURATION_MS = 24 * 60 * 60 * 1000;
+
+        let license = JSON.parse(localStorage.getItem('murghi_license_v1')) || {
+            startTime: null,
+            status: 'pending'
+        };
+
+        let config = JSON.parse(localStorage.getItem('murghi_config_v1')) || {
+            shopName: "Al-Madina Chicken Shop"
+        };
+
+        let categories = JSON.parse(localStorage.getItem('murghi_cats_v1')) || initialCategories;
+        let ledger = JSON.parse(localStorage.getItem('murghi_ledger_v1')) || [];
+
+        let activeCat = categories[0];
+        let currentGrams = 0;
+        let currentBillRs = 0;
+        let countdownInterval = null;
+
+        function init() {
+            const todayIso = new Date().toISOString().split('T')[0];
+            document.getElementById('dateFilter').value = todayIso;
+            checkTrialStatus();
+            startLiveClock();
+            document.getElementById('shopTitle').innerText = config.shopName;
+            if (!activeCat && categories.length > 0) activeCat = categories[0];
+            renderCategories();
+            updateBillBox();
+            renderApp();
+        }
+
+        function start24HourTrial() {
+            license.startTime = Date.now();
+            license.status = 'active';
+            localStorage.setItem('murghi_license_v1', JSON.stringify(license));
+            document.getElementById('trialModal').style.display = 'none';
+            checkTrialStatus();
+        }
+
+        function checkTrialStatus() {
+            const trialModal = document.getElementById('trialModal');
+            const paywall = document.getElementById('paywall');
+            const badge = document.getElementById('liveTimerBadge');
+
+            if (license.status === 'locked') {
+                trialModal.style.display = 'none';
+                paywall.style.display = 'flex';
+                badge.style.display = 'none';
+                document.getElementById('lockMsg').innerText = "Admin ki taraf se yeh system band kar diya gaya hai. Mazeed maloomat ke liye rabta karein.";
+                return;
+            }
+
+            if (license.status === 'subscribed') {
+                trialModal.style.display = 'none';
+                paywall.style.display = 'none';
+                badge.style.display = 'inline-block';
+                badge.innerText = "👑 VIP Active";
+                return;
+            }
+
+            if (!license.startTime || license.status === 'pending') {
+                trialModal.style.display = 'flex';
+                paywall.style.display = 'none';
+                badge.style.display = 'none';
+                return;
+            }
+
+            const elapsed = Date.now() - license.startTime;
+            if (elapsed >= TRIAL_DURATION_MS) {
+                trialModal.style.display = 'none';
+                paywall.style.display = 'flex';
+                badge.style.display = 'none';
+                document.getElementById('lockMsg').innerText = "Aapka 24 ghante ka free trial mukammal ho gaya hai. Mazeed istamal ke liye subscription plan hasil karein.";
+            } else {
+                trialModal.style.display = 'none';
+                paywall.style.display = 'none';
+                badge.style.display = 'inline-block';
+            }
+        }
+
+        function startLiveClock() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                if (license.status !== 'active' || !license.startTime) return;
+                const remaining = TRIAL_DURATION_MS - (Date.now() - license.startTime);
+                if (remaining <= 0) {
+                    checkTrialStatus();
+                    return;
+                }
+                const hrs = Math.floor(remaining / (1000 * 60 * 60));
+                const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+                document.getElementById('liveTimerBadge').innerText = `⏱️ ${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function renderCategories() {
+            const box = document.getElementById('catBox');
+            box.innerHTML = categories.map(cat => {
+                const isSel = activeCat && activeCat.id === cat.id;
+                return `
+                    <div class="cat-item ${isSel ? 'selected' : ''}" onclick="selectCategory(${cat.id})">
+                        <span class="icon">${cat.icon || '🍗'}</span>
+                        <b>${cat.name}</b>
+                        <span>Rs. ${cat.ratePerKg}/kg</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectCategory(id) {
+            activeCat = categories.find(c => c.id === id);
+            renderCategories();
+            if (currentGrams > 0) {
+                currentBillRs = Math.round((currentGrams / 1000) * activeCat.ratePerKg);
+            }
+            updateBillBox();
+        }
+
+        function addWeight(gramsToAdd) {
+            if (!activeCat) return;
+            document.getElementById('manualRs').value = "";
+            currentGrams += gramsToAdd;
+            document.getElementById('manualGrams').value = currentGrams;
+            currentBillRs = Math.round((currentGrams / 1000) * activeCat.ratePerKg);
+            updateBillBox();
+        }
+
+        function onManualGramInput() {
+            if (!activeCat) return;
+            document.getElementById('manualRs').value = "";
+            const g = Number(document.getElementById('manualGrams').value);
+            currentGrams = g > 0 ? g : 0;
+            currentBillRs = Math.round((currentGrams / 1000) * activeCat.ratePerKg);
+            updateBillBox();
+        }
+
+        function onManualRsInput() {
+            if (!activeCat) return;
+            document.getElementById('manualGrams').value = "";
+            const rs = Number(document.getElementById('manualRs').value);
+            currentBillRs = rs > 0 ? rs : 0;
+            currentGrams = rs > 0 ? Math.round((rs / activeCat.ratePerKg) * 1000) : 0;
+            updateBillBox();
+        }
+
+        function resetSelection() {
+            currentGrams = 0;
+            currentBillRs = 0;
+            document.getElementById('manualGrams').value = "";
+            document.getElementById('manualRs').value = "";
+            updateBillBox();
+        }
+
+        function formatWeightLabel(grams) {
+            if (grams === 0) return "0 g";
+            if (grams === 250) return "250g (1 Pao)";
+            if (grams === 500) return "500g (Adha Kilo)";
+            if (grams === 750) return "750g (3 Pao)";
+            if (grams >= 1000) {
+                const kg = (grams / 1000).toFixed(2).replace(/\.00$/, '');
+                return `${kg} KG (${grams}g)`;
+            }
+            return `${grams} g`;
+        }
+
+        function updateBillBox() {
+            document.getElementById('selItemName').innerText = activeCat ? `${activeCat.icon} ${activeCat.name}` : "Item Chunein";
+            document.getElementById('selWeightText').innerText = `Wazan: ${formatWeightLabel(currentGrams)}`;
+            document.getElementById('selTotalRs').innerText = `Rs. ${currentBillRs}`;
+            document.getElementById('resetSelBtn').style.display = (currentGrams > 0 || currentBillRs > 0) ? 'inline-block' : 'none';
+        }
+
+        function recordSale(payType) {
+            if (!activeCat || currentBillRs <= 0) {
+                alert("Pehle item aur wazan (ya Rs.) darj karein!");
+                return;
+            }
+
+            let customerName = "";
+            if (payType === "Udhaar") {
+                customerName = prompt("Udhaar lene wale customer ka naam likhein:");
+                if (customerName === null) return;
+                if (customerName.trim() === "") customerName = "Naam Nahi Likha";
+            }
+
+            const now = new Date();
+            const entry = {
+                id: Date.now(),
+                itemName: `${activeCat.icon} ${activeCat.name}`,
+                grams: currentGrams,
+                weightText: formatWeightLabel(currentGrams),
+                price: currentBillRs,
+                paymentType: payType,
+                customer: customerName.trim(),
+                dateStr: now.toISOString().split('T')[0],
+                timeStr: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            ledger.unshift(entry);
+            localStorage.setItem('murghi_ledger_v1', JSON.stringify(ledger));
+
+            resetSelection();
+            renderApp();
+        }
+
+        function deleteLedgerRow(id) {
+            if (confirm("Kya aap waqai yeh entry delete karna chahte hain?")) {
+                ledger = ledger.filter(r => r.id !== id);
+                localStorage.setItem('murghi_ledger_v1', JSON.stringify(ledger));
+                renderApp();
+            }
+        }
+
+        function clearDateFilter() {
+            document.getElementById('dateFilter').value = "";
+            renderApp();
+        }
+
+        function renderApp() {
+            const selectedDate = document.getElementById('dateFilter').value;
+            const filtered = selectedDate ? ledger.filter(r => r.dateStr === selectedDate) : ledger;
+
+            const totalSale = filtered.reduce((sum, r) => sum + r.price, 0);
+            const totalGrams = filtered.reduce((sum, r) => sum + (r.grams || 0), 0);
+            const totalUdhaar = ledger.filter(r => r.paymentType === 'Udhaar').reduce((sum, r) => sum + r.price, 0);
+
+            document.getElementById('saleLbl').innerText = selectedDate ? `Sale (${selectedDate})` : "Aaj Ki Total Sale";
+            document.getElementById('dispSales').innerText = 'Rs. ' + totalSale;
+            document.getElementById('dispUdhaar').innerText = 'Rs. ' + totalUdhaar;
+            document.getElementById('counter').innerText = filtered.length + ' entries';
+            document.getElementById('totalWeightSold').innerText = (totalGrams / 1000).toFixed(2) + ' KG';
+
+            const tbody = document.getElementById('ledgerBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:16px;">Is din ka koi hisab nahi hai</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => {
+                let badgeCls = r.paymentType === 'Cash' ? 't-cash' : (r.paymentType === 'Online' ? 't-online' : 't-udhaar');
+                return `
+                    <tr>
+                        <td>
+                            <b>${r.itemName}</b>
+                            <div style="font-size:10px; color:var(--amber); font-weight:700;">⚖️ ${r.weightText}</div>
+                            <div style="font-size:9px; color:var(--muted);">⏰ ${r.timeStr}</div>
+                            ${r.customer ? `<div style="font-size:10px; color:var(--rose); font-weight:700;">👤 ${r.customer}</div>` : ''}
+                        </td>
+                        <td style="font-weight:800;">Rs. ${r.price}</td>
+                        <td><span class="tag ${badgeCls}">${r.paymentType}</span></td>
+                        <td><button class="del-row-btn" onclick="deleteLedgerRow(${r.id})">🗑️</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openAdmin() {
+            const pwd = prompt("Master Admin Password Darj Karein:");
+            if (pwd !== "123456789") {
+                if (pwd !== null) alert("Ghalat Password!");
+                return;
+            }
+
+            const todayIso = new Date().toISOString().split('T')[0];
+            const monthPrefix = todayIso.slice(0, 7);
+
+            const todaySum = ledger.filter(r => r.dateStr === todayIso).reduce((s, r) => s + r.price, 0);
+            const monthSum = ledger.filter(r => r.dateStr.startsWith(monthPrefix)).reduce((s, r) => s + r.price, 0);
+            const udhaarSum = ledger.filter(r => r.paymentType === 'Udhaar').reduce((s, r) => s + r.price, 0);
+
+            document.getElementById('admToday').innerText = 'Rs. ' + todaySum;
+            document.getElementById('admMonth').innerText = 'Rs. ' + monthSum;
+            document.getElementById('admUdhaar').innerText = 'Rs. ' + udhaarSum;
+
+            document.getElementById('admShop').value = config.shopName;
+            document.getElementById('admStatus').value = license.status === 'pending' ? 'active' : license.status;
+
+            renderAdminCats();
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        function reset24hTimer() {
+            license.startTime = Date.now();
+            license.status = 'active';
+            document.getElementById('admStatus').value = 'active';
+            alert("Naya 24-Hour Trial Timer Set ho gaya hai! Save Settings dabana na bhulein.");
+        }
+
+        function renderAdminCats() {
+            const box = document.getElementById('admCatBox');
+            box.innerHTML = categories.map((c, i) => `
+                <div class="item-link" style="display:flex; gap:5px; margin-bottom:6px; align-items:center;">
+                    <input type="text" id="admIcon_${i}" value="${c.icon}" style="width:36px; text-align:center; background:var(--input); border:1px solid var(--border); color:#fff; padding:7px; border-radius:7px;" placeholder="🍗">
+                    <input type="text" id="admName_${i}" value="${c.name}" style="flex:2; background:var(--input); border:1px solid var(--border); color:#fff; padding:7px; border-radius:7px;" placeholder="Item Naam">
+                    <input type="number" id="admRate_${i}" value="${c.ratePerKg}" style="flex:1; background:var(--input); border:1px solid var(--border); color:#fff; padding:7px; border-radius:7px;" placeholder="Rate/KG">
+                    <button onclick="removeCat(${i})" style="background:var(--rose); border:none; color:#fff; padding:6px 8px; border-radius:6px; font-weight:800; cursor:pointer;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addCatRow() {
+            categories.push({ id: Date.now(), icon: "🍗", name: "", ratePerKg: 0 });
+            renderAdminCats();
+        }
+
+        function removeCat(i) {
+            categories.splice(i, 1);
+            renderAdminCats();
+        }
+
+        function saveAdmin() {
+            const newName = document.getElementById('admShop').value.trim();
+            if (newName) config.shopName = newName;
+
+            license.status = document.getElementById('admStatus').value;
+            if (license.status === 'active' && !license.startTime) {
+                license.startTime = Date.now();
+            }
+
+            const updatedCats = [];
+            for (let i = 0; i < categories.length; i++) {
+                const ic = document.getElementById(`admIcon_${i}`).value.trim() || "🍗";
+                const n = document.getElementById(`admName_${i}`).value.trim();
+                const r = Number(document.getElementById(`admRate_${i}`).value);
+                if (n && r > 0) {
+                    updatedCats.push({ id: Date.now() + i, icon: ic, name: n, ratePerKg: r });
+                }
+            }
+
+            if (updatedCats.length === 0) {
+                alert("Kam az kam ek item hona zaroori hai!");
+                return;
+            }
+
+            categories = updatedCats;
+            activeCat = categories[0];
+
+            localStorage.setItem('murghi_config_v1', JSON.stringify(config));
+            localStorage.setItem('murghi_license_v1', JSON.stringify(license));
+            localStorage.setItem('murghi_cats_v1', JSON.stringify(categories));
+
+            document.getElementById('shopTitle').innerText = config.shopName;
+            checkTrialStatus();
+            renderCategories();
+            resetSelection();
+            renderApp();
+            closeAdmin();
+            alert("Master Settings aur Naye Rates Save ho gaye hain!");
+        }
+
+        function closeAdmin() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
+
+        function exportBackup() {
+            const backupData = JSON.stringify({ config, license, categories, ledger }, null, 2);
+            const blob = new Blob([backupData], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${config.shopName.replace(/\s+/g, '_')}_MurghiBackup.json`;
+            a.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
